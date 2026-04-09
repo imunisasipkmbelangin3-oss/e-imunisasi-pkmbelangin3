@@ -143,7 +143,7 @@ if menu == "Input Data":
                 clear_form()
                 st.rerun()
 
-# --- HALAMAN DASHBOARD (VERSI PASTI MUNCUL & BISA DIKLIK) ---
+# --- HALAMAN DASHBOARD (VERSI PASTI JALAN & STABIL) ---
 elif menu == "Dashboard":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
     
@@ -153,10 +153,10 @@ elif menu == "Dashboard":
         if data_json:
             df = pd.DataFrame(data_json)
             
-            # --- Metrics ---
+            # --- Bagian Atas: Ringkasan ---
             st.metric("Total Anak Terdata", len(df))
             
-            # --- Grafik ---
+            # --- Bagian Tengah: Grafik ---
             kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
             counts = df[kp].value_counts().reset_index()
             counts.columns = ['Petugas', 'Jumlah']
@@ -164,32 +164,33 @@ elif menu == "Dashboard":
             fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
             st.plotly_chart(fig, use_container_width=True)
             
-            st.markdown("### 📋 Data Lengkap")
-
-            # --- PERBAIKAN LINK AGAR TIDAK KOSONG ---
-            # Kita buat fungsi untuk mengubah teks link menjadi link yang bisa diklik secara manual
-            def make_clickable(link):
-                if link and str(link).startswith("http"):
-                    return f'<a target="_blank" href="{link}">Buka Foto/Drive</a>'
-                return "Tidak ada foto"
-
-            # Terapkan fungsi ke kolom link_dokumentasi
-            if 'link_dokumentasi' in df.columns:
-                df['Link Foto'] = df['link_dokumentasi'].apply(make_clickable)
-                # Hapus kolom link asli yang panjang agar tabel rapi
-                cols = [c for c in df.columns if c != 'link_dokumentasi']
-                df = df[cols]
-
-            # Tampilkan Tabel dengan HTML aktif
-            st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+            st.markdown("---")
             
-            # Tombol Download
-            st.markdown("<br>", unsafe_allow_html=True)
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Download Data (CSV)", data=csv, file_name="data_imunisasi.csv", mime='text/csv')
+            # --- SOLUSI TERBAIK: CEK FOTO BERDASARKAN NAMA ---
+            st.markdown("### 🔍 Cek Dokumentasi Foto")
+            st.info("Pilih nama anak di bawah ini untuk memunculkan tombol akses ke Google Drive.")
+            
+            pilihan_anak = st.selectbox("Pilih Nama Anak untuk Lihat Foto:", df['nama_anak'].tolist())
+            
+            # Ambil link berdasarkan nama yang dipilih
+            link_hasil = df[df['nama_anak'] == pilihan_anak]['link_dokumentasi'].values[0]
+            
+            if link_hasil and str(link_hasil).startswith("http"):
+                # TAMPILKAN TOMBOL BESAR UNTUK KLIK
+                st.link_button(f"📂 BUKA FOTO/DRIVE UNTUK {pilihan_anak.upper()}", link_hasil, use_container_width=True)
+            else:
+                st.warning("Data ini tidak memiliki link dokumentasi.")
+
+            st.markdown("---")
+            
+            # --- Bagian Bawah: Tabel Data Mentah ---
+            st.markdown("### 📋 Tabel Riwayat Lengkap")
+            st.dataframe(df, use_container_width=True)
             
         else:
             st.info("Belum ada data.")
+    else:
+        st.error("Gagal terhubung ke database.")
             
 # --- FOOTER ---
 st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi - Dev by Riko Putra</div>", unsafe_allow_html=True)
