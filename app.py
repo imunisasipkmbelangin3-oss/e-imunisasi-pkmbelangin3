@@ -38,9 +38,9 @@ st.markdown("""
     .stApp { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); font-family: 'Poppins', sans-serif; }
     .header-box { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
     .judul-teks { color: #4a148c; font-weight: 800; font-size: 3rem; margin: 0; letter-spacing: -1px; }
-    .sub-judul { color: #7b1fa2; text-align: center; font-size: 1rem; margin-bottom: 20px; margin-top: -10px; }
     div[data-testid="stForm"] { background-color: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
     .stButton>button { width: 100%; border-radius: 12px; height: 3.5em; background: linear-gradient(45deg, #7b1fa2, #9c27b0); color: white; font-weight: 600; border: none; }
+    .info-usia { background-color: #f3e5f5; padding: 10px; border-radius: 10px; border-left: 5px solid #7b1fa2; color: #4a148c; font-weight: 600; margin-bottom: 15px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -51,13 +51,11 @@ if 'logged_in' not in st.session_state:
 if not st.session_state['logged_in']:
     if img_data:
         st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="65"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
-    
     with st.form("login_form"):
         st.markdown("<h3 style='text-align:center; color:#4a148c;'>🔐 Login Petugas</h3>", unsafe_allow_html=True)
         user = st.text_input("Username")
         pwd = st.text_input("Password", type="password")
-        submit_login = st.form_submit_button("MASUK")
-        if submit_login:
+        if st.form_submit_button("MASUK"):
             if user == "admin" and pwd == "imunisasi2026":
                 st.session_state['logged_in'] = True
                 st.rerun()
@@ -65,10 +63,8 @@ if not st.session_state['logged_in']:
                 st.error("Username atau Password salah!")
     st.stop()
 
-# --- NAVIGASI SIDEBAR ---
-st.sidebar.title("📌 Menu Utama")
+# --- NAVIGASI ---
 menu = st.sidebar.radio("Pilih Halaman:", ["Input Data", "Dashboard Monitoring", "Keluar"])
-
 if menu == "Keluar":
     st.session_state['logged_in'] = False
     st.rerun()
@@ -79,16 +75,8 @@ if menu == "Input Data":
         st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="60"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
     
     with st.form("main_form", clear_on_submit=True):
-        st.markdown("### 👨‍⚕️ Petugas Pelaksana")
-        daftar_petugas = [
-            "-- Pilih Nama Petugas --", "Winoto Hadi, A.Md.Kep", "Yanto Perdianta, S.Kep.Ns", 
-            "Eva Asri Deti, A.Md.Keb", "Desiani, A.Md.Keb", "Dian Yuniarsih, A.Md.Keb", 
-            "Florentina Ina, A.Md.Keb", "Dayang Rafeah, A.Md.Keb", "Solekah, A.Md.Keb", 
-            "Rita Epie, A.Md.Keb", "Jumini, A.Md.Keb", "Yuliana Ratih, A.Md.Keb", 
-            "Esty Eva Naoumi, A.Md.Kep", "Trismiya Risva, A.Md.Keb", "Regina Susan, A.Md.Keb", 
-            "Jeane Els Dame P, A.Md.Kep", "Andriyani, A.Md.Keb", "Dewi Palentek, A.Md.Kep", 
-            "Riezka Dwi Andiny Sulistyaningsih, A.Md.Kep", "Bintari Dwi P, A.Md.Keb"
-        ]
+        st.markdown("### 👨‍⚕️ Petugas")
+        daftar_petugas = ["-- Pilih Nama Petugas --", "Winoto Hadi, A.Md.Kep", "Yanto Perdianta, S.Kep.Ns", "Eva Asri Deti, A.Md.Keb", "Desiani, A.Md.Keb", "Dian Yuniarsih, A.Md.Keb", "Florentina Ina, A.Md.Keb", "Dayang Rafeah, A.Md.Keb", "Solekah, A.Md.Keb", "Rita Epie, A.Md.Keb", "Jumini, A.Md.Keb", "Yuliana Ratih, A.Md.Keb", "Esty Eva Naoumi, A.Md.Kep", "Trismiya Risva, A.Md.Keb", "Regina Susan, A.Md.Keb", "Jeane Els Dame P, A.Md.Kep", "Andriyani, A.Md.Keb", "Dewi Palentek, A.Md.Kep", "Riezka Dwi Andiny Sulistyaningsih, A.Md.Kep", "Bintari Dwi P, A.Md.Keb"]
         nama_petugas = st.selectbox("Nama Petugas Bertugas*", daftar_petugas)
         
         st.markdown("### 👶 Informasi Anak")
@@ -99,9 +87,10 @@ if menu == "Input Data":
             jk = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], horizontal=True)
         with c2:
             tgl_lahir = st.date_input("Tanggal Lahir")
+            # LOGIKA HITUNG USIA (DITARUH DI DALAM FORM AGAR TERHITUNG SAAT SUBMIT)
             tgl_skrg = date.today()
             usia_bln = (tgl_skrg.year - tgl_lahir.year) * 12 + tgl_skrg.month - tgl_lahir.month
-            st.info(f"Usia: **{usia_bln} Bulan**")
+            st.markdown(f'<div class="info-usia">Usia Terhitung: {usia_bln} Bulan</div>', unsafe_allow_html=True)
 
         st.markdown("### 👪 Orang Tua & Alamat")
         c3, c4 = st.columns(2)
@@ -112,20 +101,12 @@ if menu == "Input Data":
             alamat = st.text_area("Alamat Lengkap")
 
         st.markdown("### 💉 Tindakan Medik (Vaksin)")
-        # DAFTAR VAKSIN LENGKAP SEPERTI AWAL
-        daftar_vaksin = [
-            "HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", 
-            "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", 
-            "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", 
-            "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", 
-            "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"
-        ]
+        daftar_vaksin = ["HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"]
         vaksin_dipilih = st.multiselect("Vaksin*", daftar_vaksin)
         
-        submit = st.form_submit_button("SIMPAN INPUTAN")
-        if submit:
+        if st.form_submit_button("SIMPAN INPUTAN"):
             if nama_petugas == "-- Pilih Nama Petugas --" or not nama_anak or not nik:
-                st.error("❌ Mohon isi Nama Petugas, Nama Anak, dan NIK!")
+                st.error("❌ Data wajib belum lengkap!")
             else:
                 payload = {
                     "nama_petugas": nama_petugas, "nama_anak": nama_anak, "nik_anak": nik,
@@ -135,42 +116,26 @@ if menu == "Input Data":
                 }
                 res = requests.post(url_base, json=payload, headers=headers)
                 if res.status_code in [200, 201]:
-                    st.success(f"✅ Data {nama_anak} Berhasil Disimpan!")
+                    st.success(f"✅ Data {nama_anak} ({usia_bln} Bln) Berhasil Disimpan!")
                     st.balloons()
 
 # --- HALAMAN 2: DASHBOARD MONITORING ---
 elif menu == "Dashboard Monitoring":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
-    
-    try:
-        res = requests.get(url_base, headers=headers)
-        if res.status_code == 200:
-            df = pd.DataFrame(res.json())
-            if not df.empty:
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Total Input", len(df))
-                
-                # Deteksi kolom petugas (biar grafiknya muncul)
-                kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
-                col2.metric("Petugas Aktif", df[kp].nunique())
-                col3.metric("Hari Ini", date.today().strftime("%d/%m/%Y"))
-                
-                st.markdown("### 📈 Grafik Sebaran Data Petugas")
-                # Menghitung data agar grafik terlihat naik/berbeda
-                counts = df[kp].value_counts().reset_index()
-                counts.columns = ['Nama Petugas', 'Jumlah Data']
-                
-                fig = px.bar(counts, x='Nama Petugas', y='Jumlah Data', text='Jumlah Data',
-                             color='Jumlah Data', color_continuous_scale='Purples')
-                fig.update_traces(textposition='outside')
-                st.plotly_chart(fig, use_container_width=True)
-                
-                st.markdown("### 📋 Riwayat Data Terkini")
-                st.dataframe(df, use_container_width=True)
-            else:
-                st.info("Belum ada data di database.")
-    except Exception as e:
-        st.error(f"Error: {e}")
+    res = requests.get(url_base, headers=headers)
+    if res.status_code == 200:
+        df = pd.DataFrame(res.json())
+        if not df.empty:
+            c1, c2 = st.columns(2)
+            c1.metric("Total Input", len(df))
+            kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
+            c2.metric("Petugas Aktif", df[kp].nunique())
+            
+            counts = df[kp].value_counts().reset_index()
+            counts.columns = ['Nama Petugas', 'Jumlah Data']
+            fig = px.bar(counts, x='Nama Petugas', y='Jumlah Data', text='Jumlah Data', color='Jumlah Data', color_continuous_scale='Purples')
+            fig.update_traces(textposition='outside')
+            st.plotly_chart(fig, use_container_width=True)
+            st.dataframe(df, use_container_width=True)
 
-# --- FOOTER ---
 st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi Digital - Dev by Riko Putra</div>", unsafe_allow_html=True)
