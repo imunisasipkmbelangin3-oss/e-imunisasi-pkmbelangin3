@@ -38,9 +38,10 @@ st.markdown("""
     .stApp { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); font-family: 'Poppins', sans-serif; }
     .header-box { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
     .judul-teks { color: #4a148c; font-weight: 800; font-size: 3rem; margin: 0; letter-spacing: -1px; }
-    div[data-testid="stForm"] { background-color: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    /* Container Putih untuk Form */
+    .main-container { background-color: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .stButton>button { width: 100%; border-radius: 12px; height: 3.5em; background: linear-gradient(45deg, #7b1fa2, #9c27b0); color: white; font-weight: 600; border: none; }
-    .info-usia { background-color: #f3e5f5; padding: 10px; border-radius: 10px; border-left: 5px solid #7b1fa2; color: #4a148c; font-weight: 600; margin-bottom: 15px; }
+    .badge-usia { background: #7b1fa2; color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600; font-size: 1.2rem; display: inline-block; margin-top: 5px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -51,16 +52,18 @@ if 'logged_in' not in st.session_state:
 if not st.session_state['logged_in']:
     if img_data:
         st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="65"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
-    with st.form("login_form"):
+    with st.container():
+        st.markdown('<div class="main-container">', unsafe_allow_html=True)
         st.markdown("<h3 style='text-align:center; color:#4a148c;'>🔐 Login Petugas</h3>", unsafe_allow_html=True)
         user = st.text_input("Username")
         pwd = st.text_input("Password", type="password")
-        if st.form_submit_button("MASUK"):
+        if st.button("MASUK"):
             if user == "admin" and pwd == "imunisasi2026":
                 st.session_state['logged_in'] = True
                 st.rerun()
             else:
                 st.error("Username atau Password salah!")
+        st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
 # --- NAVIGASI ---
@@ -74,50 +77,59 @@ if menu == "Input Data":
     if img_data:
         st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="60"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
     
-    with st.form("main_form", clear_on_submit=True):
-        st.markdown("### 👨‍⚕️ Petugas")
-        daftar_petugas = ["-- Pilih Nama Petugas --", "Winoto Hadi, A.Md.Kep", "Yanto Perdianta, S.Kep.Ns", "Eva Asri Deti, A.Md.Keb", "Desiani, A.Md.Keb", "Dian Yuniarsih, A.Md.Keb", "Florentina Ina, A.Md.Keb", "Dayang Rafeah, A.Md.Keb", "Solekah, A.Md.Keb", "Rita Epie, A.Md.Keb", "Jumini, A.Md.Keb", "Yuliana Ratih, A.Md.Keb", "Esty Eva Naoumi, A.Md.Kep", "Trismiya Risva, A.Md.Keb", "Regina Susan, A.Md.Keb", "Jeane Els Dame P, A.Md.Kep", "Andriyani, A.Md.Keb", "Dewi Palentek, A.Md.Kep", "Riezka Dwi Andiny Sulistyaningsih, A.Md.Kep", "Bintari Dwi P, A.Md.Keb"]
-        nama_petugas = st.selectbox("Nama Petugas Bertugas*", daftar_petugas)
-        
-        st.markdown("### 👶 Informasi Anak")
-        c1, c2 = st.columns(2)
-        with c1:
-            nama_anak = st.text_input("Nama Lengkap Anak*")
-            nik = st.text_input("NIK Anak*")
-            jk = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], horizontal=True)
-        with c2:
-            tgl_lahir = st.date_input("Tanggal Lahir")
-            # LOGIKA HITUNG USIA (DITARUH DI DALAM FORM AGAR TERHITUNG SAAT SUBMIT)
-            tgl_skrg = date.today()
-            usia_bln = (tgl_skrg.year - tgl_lahir.year) * 12 + tgl_skrg.month - tgl_lahir.month
-            st.markdown(f'<div class="info-usia">Usia Terhitung: {usia_bln} Bulan</div>', unsafe_allow_html=True)
+    # KITA GUNAKAN CONTAINER BIASA (BUKAN st.form) AGAR INTERAKTIF
+    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    
+    st.markdown("### 👨‍⚕️ Data Petugas")
+    daftar_petugas = ["-- Pilih Nama Petugas --", "Winoto Hadi, A.Md.Kep", "Yanto Perdianta, S.Kep.Ns", "Eva Asri Deti, A.Md.Keb", "Desiani, A.Md.Keb", "Dian Yuniarsih, A.Md.Keb", "Florentina Ina, A.Md.Keb", "Dayang Rafeah, A.Md.Keb", "Solekah, A.Md.Keb", "Rita Epie, A.Md.Keb", "Jumini, A.Md.Keb", "Yuliana Ratih, A.Md.Keb", "Esty Eva Naoumi, A.Md.Kep", "Trismiya Risva, A.Md.Keb", "Regina Susan, A.Md.Keb", "Jeane Els Dame P, A.Md.Kep", "Andriyani, A.Md.Keb", "Dewi Palentek, A.Md.Kep", "Riezka Dwi Andiny Sulistyaningsih, A.Md.Kep", "Bintari Dwi P, A.Md.Keb"]
+    nama_petugas = st.selectbox("Nama Petugas Bertugas*", daftar_petugas)
+    
+    st.markdown("---")
+    st.markdown("### 👶 Informasi Anak")
+    c1, c2 = st.columns(2)
+    with c1:
+        nama_anak = st.text_input("Nama Lengkap Anak*")
+        nik = st.text_input("NIK Anak*")
+        jk = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], horizontal=True)
+    with c2:
+        tgl_lahir = st.date_input("Tanggal Lahir", value=date.today())
+        # HITUNG USIA OTOMATIS (LANGSUNG TERDETEKSI KARENA DI LUAR st.form)
+        tgl_skrg = date.today()
+        usia_bln = (tgl_skrg.year - tgl_lahir.year) * 12 + tgl_skrg.month - tgl_lahir.month
+        st.markdown("Usia Anak Saat Ini:")
+        st.markdown(f'<div class="badge-usia">{usia_bln} Bulan</div>', unsafe_allow_html=True)
 
-        st.markdown("### 👪 Orang Tua & Alamat")
-        c3, c4 = st.columns(2)
-        with c3:
-            nama_ayah = st.text_input("Nama Ayah")
-            nama_ibu = st.text_input("Nama Ibu")
-        with c4:
-            alamat = st.text_area("Alamat Lengkap")
+    st.markdown("---")
+    st.markdown("### 👪 Orang Tua & Alamat")
+    c3, c4 = st.columns(2)
+    with c3:
+        nama_ayah = st.text_input("Nama Ayah")
+        nama_ibu = st.text_input("Nama Ibu")
+    with c4:
+        alamat = st.text_area("Alamat Lengkap")
 
-        st.markdown("### 💉 Tindakan Medik (Vaksin)")
-        daftar_vaksin = ["HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"]
-        vaksin_dipilih = st.multiselect("Vaksin*", daftar_vaksin)
-        
-        if st.form_submit_button("SIMPAN INPUTAN"):
-            if nama_petugas == "-- Pilih Nama Petugas --" or not nama_anak or not nik:
-                st.error("❌ Data wajib belum lengkap!")
-            else:
-                payload = {
-                    "nama_petugas": nama_petugas, "nama_anak": nama_anak, "nik_anak": nik,
-                    "tgl_lahir": str(tgl_lahir), "jenis_kelamin": jk, "usia_bulan": usia_bln,
-                    "nama_ayah": nama_ayah, "nama_ibu": nama_ibu, "alamat": alamat,
-                    "vaksin": ", ".join(vaksin_dipilih)
-                }
-                res = requests.post(url_base, json=payload, headers=headers)
-                if res.status_code in [200, 201]:
-                    st.success(f"✅ Data {nama_anak} ({usia_bln} Bln) Berhasil Disimpan!")
-                    st.balloons()
+    st.markdown("---")
+    st.markdown("### 💉 Tindakan Medik")
+    daftar_vaksin = ["HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"]
+    vaksin_dipilih = st.multiselect("Vaksin*", daftar_vaksin)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("SIMPAN DATA SEKARANG"):
+        if nama_petugas == "-- Pilih Nama Petugas --" or not nama_anak or not nik:
+            st.error("❌ Mohon lengkapi Nama Petugas, Nama Anak, dan NIK!")
+        else:
+            payload = {
+                "nama_petugas": nama_petugas, "nama_anak": nama_anak, "nik_anak": nik,
+                "tgl_lahir": str(tgl_lahir), "jenis_kelamin": jk, "usia_bulan": usia_bln,
+                "nama_ayah": nama_ayah, "nama_ibu": nama_ibu, "alamat": alamat,
+                "vaksin": ", ".join(vaksin_dipilih)
+            }
+            res = requests.post(url_base, json=payload, headers=headers)
+            if res.status_code in [200, 201]:
+                st.success(f"✅ Berhasil! Data {nama_anak} ({usia_bln} Bulan) sudah tersimpan.")
+                st.balloons()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- HALAMAN 2: DASHBOARD MONITORING ---
 elif menu == "Dashboard Monitoring":
