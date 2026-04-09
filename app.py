@@ -123,32 +123,62 @@ if menu == "Input Data":
                     st.success("Data Tersimpan!")
                     st.balloons()
 
-# --- HALAMAN 2: DASHBOARD MONITORING ---
+# --- HALAMAN 2: DASHBOARD MONITORING (VERSI AUTO-DETECT) ---
 elif menu == "Dashboard Monitoring":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
     
     try:
         res = requests.get(url_base, headers=headers)
         if res.status_code == 200:
-            df = pd.DataFrame(res.json())
-            if not df.empty:
-                col1, col2 = st.columns(2)
-                col1.metric("Total Anak", len(df))
-                col2.metric("Petugas Aktif", df['nama_petugas'].nunique() if 'nama_petugas' in df.columns else 0)
+            data_json = res.json()
+            if data_json:
+                df = pd.DataFrame(data_json)
                 
-                st.markdown("### 📈 Grafik Kinerja")
-                if 'nama_petugas' in df.columns:
-                    counts = df['nama_petugas'].value_counts().reset_index()
-                    counts.columns = ['Petugas', 'Jumlah']
-                    fig = px.bar(counts, x='Petugas', y='Jumlah', color='Jumlah', color_continuous_scale='Purples')
-                    st.plotly_chart(fig, use_container_width=True)
+                # --- RINGKASAN ---
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Anak", len(df))
                 
-                st.markdown("### 📋 Tabel Data")
+                # Deteksi otomatis kolom petugas (biar tidak error)
+                kolom_p = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
+                c2.metric("Petugas Aktif", df[kolom_p].nunique())
+                c3.metric("Hari Ini", date.today().strftime("%d/%m/%Y"))
+
+                # --- GRAFIK ---
+                st.markdown("### 📈 Grafik Sebaran Data per Petugas")
+                
+                # Menghitung jumlah per petugas
+                df_counts = df[kolom_p].value_counts().reset_index()
+                df_counts.columns = ['Petugas', 'Jumlah']
+                
+                # Membuat grafik batang dengan warna gradasi
+                fig = px.bar(
+                    df_counts, 
+                    x='Petugas', 
+                    y='Jumlah',
+                    text='Jumlah', # Munculkan angka di atas batang
+                    color='Jumlah', 
+                    color_continuous_scale='RdPu', # Warna Pink-Ungu
+                    labels={'Petugas': 'Nama Petugas', 'Jumlah': 'Total Input Data'}
+                )
+                
+                # Mengatur tampilan grafik agar lebih cantik
+                fig.update_traces(textposition='outside')
+                fig.update_layout(
+                    xaxis_tickangle=-45,
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # --- TABEL ---
+                st.markdown("### 📋 Riwayat Transaksi Terbaru")
                 st.dataframe(df, use_container_width=True)
+                
             else:
-                st.info("Data kosong.")
+                st.info("Belum ada data yang masuk.")
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Gagal memuat grafik: {e}")
 
 # --- FOOTER ---
 st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi - Dev by Riko Putra</div>", unsafe_allow_html=True)
