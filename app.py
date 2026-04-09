@@ -131,14 +131,58 @@ if menu == "Input Data":
                 reset_form()
                 st.rerun()
 
-# --- HALAMAN DASHBOARD ---
+# --- HALAMAN DASHBOARD (VERSI LENGKAP DENGAN GRAFIK) ---
 elif menu == "Dashboard":
-    st.markdown("<h1 style='text-align:center;'>📊 Dashboard</h1>", unsafe_allow_html=True)
-    res = requests.get(url_base, headers=headers)
-    if res.status_code == 200:
-        df = pd.DataFrame(res.json())
-        if not df.empty:
-            st.dataframe(df, use_container_width=True)
+    st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
+    
+    try:
+        res = requests.get(url_base, headers=headers)
+        if res.status_code == 200:
+            data_json = res.json()
+            if data_json:
+                df = pd.DataFrame(data_json)
+                
+                # --- Metrics Atas ---
+                c1, c2 = st.columns(2)
+                c1.metric("Total Anak Terdata", len(df))
+                kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
+                c2.metric("Petugas Aktif", df[kp].nunique())
+                
+                st.markdown("---")
+
+                # --- GRAFIK CAPAIAN (KEMBALI HADIR) ---
+                st.markdown("### 📈 Capaian Input Per Petugas")
+                import plotly.express as px # Memastikan library grafik terpanggil
+                
+                df_counts = df[kp].value_counts().reset_index()
+                df_counts.columns = ['Petugas', 'Jumlah']
+                
+                fig = px.bar(
+                    df_counts, 
+                    x='Jumlah', 
+                    y='Petugas',
+                    orientation='h',
+                    text='Jumlah',
+                    color='Jumlah',
+                    color_continuous_scale='Purples'
+                )
+                fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # --- Tabel Data ---
+                st.markdown("### 📋 Tabel Riwayat Lengkap")
+                st.dataframe(df, use_container_width=True)
+                
+                # Tombol Download
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Download Data (CSV)", data=csv, file_name="data_imunisasi.csv", mime='text/csv')
+                
+            else:
+                st.info("Belum ada data di database.")
+        else:
+            st.error("Gagal mengambil data.")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan teknis: {e}")
             
 # --- FOOTER ---
 st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi - Dev by Riko Putra</div>", unsafe_allow_html=True)
