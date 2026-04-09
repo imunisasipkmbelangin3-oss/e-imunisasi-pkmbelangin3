@@ -131,7 +131,7 @@ if menu == "Input Data":
                 reset_form()
                 st.rerun()
 
-# --- HALAMAN DASHBOARD (VERSI LENGKAP DENGAN GRAFIK) ---
+# --- HALAMAN DASHBOARD (VERSI REKAP VAKSIN LENGKAP) ---
 elif menu == "Dashboard":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
     
@@ -150,22 +150,43 @@ elif menu == "Dashboard":
                 
                 st.markdown("---")
 
-                # --- GRAFIK CAPAIAN (KEMBALI HADIR) ---
-                st.markdown("### 📈 Capaian Input Per Petugas")
-                import plotly.express as px # Memastikan library grafik terpanggil
+                # --- BAGIAN REKAP TOTAL PER VAKSIN ---
+                st.markdown("### 💉 Rekap Total Per Jenis Vaksin")
                 
+                # Proses memecah data vaksin yang dipisah koma
+                if 'vaksin' in df.columns:
+                    # Mengambil semua baris vaksin, memecahnya, dan menghitung totalnya
+                    all_vaksins = df['vaksin'].str.split(', ').explode()
+                    rekap_v_counts = all_vaksins.value_counts().reset_index()
+                    rekap_v_counts.columns = ['Jenis Vaksin', 'Total Diberikan']
+                    
+                    # Tampilkan dalam kolom ringkasan (Expander agar rapi)
+                    with st.expander("Lihat Detail Angka Per Vaksin"):
+                        st.table(rekap_v_counts)
+
+                    # Tampilkan dalam Grafik Batang agar mudah dibaca
+                    fig_v = px.bar(
+                        rekap_v_counts,
+                        x='Total Diberikan',
+                        y='Jenis Vaksin',
+                        orientation='h',
+                        text='Total Diberikan',
+                        title="Cakupan Imunisasi",
+                        color='Total Diberikan',
+                        color_continuous_scale='GnBu' # Warna hijau-biru agar beda dengan petugas
+                    )
+                    fig_v.update_layout(yaxis={'categoryorder':'total ascending'}, height=600)
+                    st.plotly_chart(fig_v, use_container_width=True)
+                
+                st.markdown("---")
+
+                # --- Grafik Capaian Petugas ---
+                st.markdown("### 📈 Capaian Input Per Petugas")
                 df_counts = df[kp].value_counts().reset_index()
                 df_counts.columns = ['Petugas', 'Jumlah']
                 
-                fig = px.bar(
-                    df_counts, 
-                    x='Jumlah', 
-                    y='Petugas',
-                    orientation='h',
-                    text='Jumlah',
-                    color='Jumlah',
-                    color_continuous_scale='Purples'
-                )
+                fig = px.bar(df_counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', 
+                             color='Jumlah', color_continuous_scale='Purples')
                 fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
                 st.plotly_chart(fig, use_container_width=True)
                 
@@ -173,14 +194,8 @@ elif menu == "Dashboard":
                 st.markdown("### 📋 Tabel Riwayat Lengkap")
                 st.dataframe(df, use_container_width=True)
                 
-                # Tombol Download
-                csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Download Data (CSV)", data=csv, file_name="data_imunisasi.csv", mime='text/csv')
-                
             else:
-                st.info("Belum ada data di database.")
-        else:
-            st.error("Gagal mengambil data.")
+                st.info("Belum ada data.")
     except Exception as e:
         st.error(f"Terjadi kesalahan teknis: {e}")
             
