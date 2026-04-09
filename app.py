@@ -61,10 +61,15 @@ if not st.session_state['logged_in']:
                 else: st.error("Username atau Password salah!")
     st.stop()
 
-# --- 6. FUNGSI RESET ---
+# --- FUNGSI RESET DATA (VERSI STABIL) ---
 def reset_form():
-    for key in ["nama_anak", "nik", "ayah", "ibu", "alamat", "vaksin"]:
-        st.session_state[key] = "" if key != "vaksin" else []
+    # Menghapus isi session state agar input kembali kosong
+    if "nama_anak" in st.session_state: st.session_state.nama_anak = ""
+    if "nik" in st.session_state: st.session_state.nik = ""
+    if "ayah" in st.session_state: st.session_state.ayah = ""
+    if "ibu" in st.session_state: st.session_state.ibu = ""
+    if "alamat" in st.session_state: st.session_state.alamat = ""
+    if "vaksin" in st.session_state: st.session_state.vaksin = []
 
 # Navigasi Sidebar
 menu = st.sidebar.radio("Navigasi Menu:", ["Input Data", "Dashboard", "Keluar"])
@@ -116,17 +121,32 @@ if menu == "Input Data":
             st.warning("⚠️ Mohon lengkapi Petugas, Desa, dan Nama Anak!")
         else:
             payload = {
-                "nama_petugas": nama_petugas, "nama_desa": nama_desa, "nama_anak": n_anak, 
-                "nik_anak": n_nik, "tgl_lahir": str(tgl_lhr), "jenis_kelamin": n_jk, 
-                "usia_bulan": bln, "nama_ayah": n_ayah, "nama_ibu": n_ibu, 
-                "alamat": n_alamat, "link_dokumentasi": LINK_DRIVE, "vaksin": ", ".join(n_vaksin)
+                "nama_petugas": nama_petugas, 
+                "nama_desa": nama_desa, 
+                "nama_anak": n_anak, 
+                "nik_anak": n_nik, 
+                "tgl_lahir": str(tgl_lhr), 
+                "jenis_kelamin": n_jk, 
+                "usia_bulan": bln, 
+                "nama_ayah": n_ayah, 
+                "nama_ibu": n_ibu, 
+                "alamat": n_alamat, 
+                "link_dokumentasi": LINK_DRIVE, 
+                "vaksin": ", ".join(n_vaksin)
             }
-            res = requests.post(url_base, json=payload, headers=headers)
-            if res.status_code in [200, 201]:
-                st.success(f"✅ Data {n_anak} berhasil disimpan!")
-                st.balloons()
-                reset_form()
-                st.rerun()
+            
+            try:
+                res = requests.post(url_base, json=payload, headers=headers)
+                if res.status_code in [200, 201]:
+                    st.success(f"✅ Data {n_anak} berhasil disimpan!")
+                    st.balloons()
+                    # Menjalankan reset dan rerun dengan aman
+                    reset_form()
+                    st.rerun()
+                else:
+                    st.error(f"Gagal simpan ke database. Kode: {res.status_code}")
+            except Exception as e:
+                st.error(f"Terjadi kesalahan koneksi: {e}")
 
 # --- 8. HALAMAN DASHBOARD ---
 elif menu == "Dashboard":
