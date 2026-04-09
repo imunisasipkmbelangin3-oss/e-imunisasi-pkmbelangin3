@@ -143,7 +143,7 @@ if menu == "Input Data":
                 clear_form()
                 st.rerun()
 
-# --- HALAMAN DASHBOARD (VERSI LINK BISA DIKLIK) ---
+# --- HALAMAN DASHBOARD (VERSI DETEKSI LINK OTOMATIS) ---
 elif menu == "Dashboard":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
     
@@ -153,37 +153,35 @@ elif menu == "Dashboard":
         if data_json:
             df = pd.DataFrame(data_json)
             
-            # --- Ringkasan Atas ---
+            # --- Metrics ---
             st.metric("Total Anak Terdata", len(df))
             
             # --- Grafik ---
-            counts = df['nama_petugas'].value_counts().reset_index()
+            kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
+            counts = df[kp].value_counts().reset_index()
             counts.columns = ['Petugas', 'Jumlah']
-            fig = px.bar(counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', 
-                         color='Jumlah', color_continuous_scale='Purples')
+            fig = px.bar(counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', color='Jumlah', color_continuous_scale='Purples')
             fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
             st.plotly_chart(fig, use_container_width=True)
             
-            # --- TABEL DENGAN LINK AKTIF ---
+            # --- TABEL DENGAN DETEKSI KOLOM LINK ---
             st.markdown("### 📋 Data Lengkap (Klik Link untuk Lihat Foto)")
             
-            # Bagian ini yang membuat link bisa diklik:
+            # Mencari kolom mana yang mengandung kata 'link' atau 'dok'
+            kolom_link = [c for c in df.columns if 'link' in c.lower() or 'dok' in c.lower()]
+            
+            config_kolom = {}
+            for col in kolom_link:
+                config_kolom[col] = st.column_config.LinkColumn(
+                    "Link Dokumentasi",
+                    display_text="Buka Foto/Drive"
+                )
+            
             st.dataframe(
                 df, 
                 use_container_width=True,
-                column_config={
-                    "link_dokumentasi": st.column_config.LinkColumn(
-                        "Link Dokumentasi",
-                        help="Klik link ini untuk membuka Google Drive",
-                        validate=r"^https://.*",
-                        display_text="Buka Foto/Drive" # Teks yang muncul di tabel
-                    )
-                }
+                column_config=config_kolom # Menggunakan konfigurasi yang sudah dideteksi
             )
-            
-            # Tombol Download CSV
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Download Data (CSV)", data=csv, file_name=f"laporan_imunisasi.csv", mime='text/csv')
             
         else:
             st.info("Belum ada data.")
