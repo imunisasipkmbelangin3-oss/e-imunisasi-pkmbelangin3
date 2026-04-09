@@ -113,35 +113,57 @@ if menu == "Input Data":
                 reset_form()
                 st.rerun()
 
-# --- 8. HALAMAN DASHBOARD (PROFESIONAL) ---
+# --- 8. HALAMAN DASHBOARD (VERSI REKAP TABEL LENGKAP) ---
 elif menu == "Dashboard":
     st.markdown('<div class="header-box"><h1 class="judul-teks">📊 DASHBOARD MONITORING</h1></div>', unsafe_allow_html=True)
     
     res = requests.get(url_base, headers=headers)
     if res.status_code == 200:
-        df = pd.DataFrame(res.json())
-        if not df.empty:
-            # Row 1: Metrics
+        data_json = res.json()
+        if data_json:
+            df = pd.DataFrame(data_json)
+            
+            # --- Row 1: Metrics ---
             c1, c2, c3 = st.columns(3)
             c1.metric("Total Anak", len(df))
             kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
             c2.metric("Petugas Aktif", df[kp].nunique())
-            c3.metric("Periode", "Tahun 2026")
+            c3.metric("Update Terakhir", date.today().strftime("%d/%m/%Y"))
 
-            # Row 2: Grafik Rekap Vaksin
             st.markdown("---")
+
+            # --- Row 2: REKAP TABEL VAKSIN LENGKAP (Termasuk Nol) ---
             st.subheader("💉 Rekapitulasi Jenis Vaksin Terpakai")
-            all_v = df['vaksin'].str.split(', ').explode()
-            v_counts = all_v.value_counts().reset_index()
-            v_counts.columns = ['Vaksin', 'Total']
             
-            fig_v = px.bar(v_counts, x='Total', y='Vaksin', orientation='h', text='Total',
-                           color='Total', color_continuous_scale='GnBu')
-            fig_v.update_layout(yaxis={'categoryorder':'total ascending'}, height=500)
-            st.plotly_chart(fig_v, use_container_width=True)
+            # Daftar Master Vaksin (Sesuai dengan pilihan di Input Data)
+            master_vaksin = [
+                "HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", 
+                "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", 
+                "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", 
+                "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", 
+                "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"
+            ]
+            
+            # Proses Hitung
+            all_v = df['vaksin'].str.split(', ').explode()
+            v_counts = all_v.value_counts().to_dict()
+            
+            # Buat DataFrame baru berdasarkan Master Vaksin agar yang 0 tetap muncul
+            rekap_data = []
+            for v in master_vaksin:
+                rekap_data.append({
+                    "Jenis Vaksin": v,
+                    "Total Diberikan": v_counts.get(v, 0) # Ambil angka, jika tidak ada isi 0
+                })
+            
+            df_rekap = pd.DataFrame(rekap_data)
+            
+            # Tampilkan dalam Tabel yang Rapi
+            st.table(df_rekap)
 
-            # Row 3: Grafik Petugas
             st.markdown("---")
+
+            # --- Row 3: Grafik Petugas ---
             st.subheader("📈 Capaian Input Data Per Petugas")
             p_counts = df[kp].value_counts().reset_index()
             p_counts.columns = ['Petugas', 'Jumlah']
@@ -151,7 +173,7 @@ elif menu == "Dashboard":
             fig_p.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
             st.plotly_chart(fig_p, use_container_width=True)
 
-            # Row 4: Tabel Data
+            # --- Row 4: Tabel Data ---
             st.markdown("---")
             st.subheader("📋 Data Riwayat Lengkap")
             st.dataframe(df, use_container_width=True)
@@ -161,7 +183,6 @@ elif menu == "Dashboard":
             st.download_button("📥 Ekspor Laporan (CSV)", data=csv, file_name=f"laporan_imunisasi_{date.today()}.csv")
         else:
             st.info("Database masih kosong.")
-    else: st.error("Gagal mengambil data database.")
-
+            
 # --- 9. FOOTER ---
 st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi Digital - Dev by Riko Putra</div>", unsafe_allow_html=True)
