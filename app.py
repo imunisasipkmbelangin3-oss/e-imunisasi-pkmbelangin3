@@ -94,7 +94,35 @@ if menu == "Input Data":
         nama_ibu = st.text_input("Nama Ibu", key="ibu")
     with c2:
         alamat = st.text_area("Alamat Lengkap", key="alamat")
+# --- BAGIAN INPUT DATA (UPDATE DENGAN DOKUMENTASI) ---
+# (Cari bagian di bawah alamat, lalu sesuaikan kodenya seperti ini)
 
+    st.markdown("---")
+    st.markdown("### 👪 Orang Tua, Alamat & Dokumentasi")
+    c1, c2 = st.columns(2)
+    with c1:
+        nama_ayah = st.text_input("Nama Ayah", key="ayah")
+        nama_ibu = st.text_input("Nama Ibu", key="ibu")
+    with c2:
+        alamat = st.text_area("Alamat Lengkap", key="alamat")
+        # INPUT BARU UNTUK LINK GOOGLE DRIVE
+        link_dok = st.text_input("🔗 Link Dokumentasi (Google Drive/Foto)", placeholder="https://drive.google.com/...", key="link_dok")
+
+    st.markdown("---")
+    # ... (Bagian Vaksin tetap sama) ...
+
+    if st.button("SIMPAN DATA", use_container_width=True):
+        if nama_petugas == "-- Pilih --" or not nama_anak or not nik:
+            st.error("❌ Data wajib belum lengkap!")
+        else:
+            payload = {
+                "nama_petugas": nama_petugas, "nama_anak": nama_anak, "nik_anak": nik,
+                "tgl_lahir": str(tgl_lahir), "jenis_kelamin": jk, "usia_bulan": total_bulan,
+                "nama_ayah": nama_ayah, "nama_ibu": nama_ibu, "alamat": alamat,
+                "link_dokumentasi": link_dok, # MENGIRIM LINK KE DATABASE
+                "vaksin": ", ".join(vaksin_dipilih)
+            }
+            # ... (Proses simpan tetap sama) ...
     st.markdown("---")
     st.markdown("### 💉 Vaksin")
     semua_vaksin = ["HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"]
