@@ -30,6 +30,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- INITIALIZE SESSION STATE (UNTUK PENGUNCI DATA) ---
+# Link ini akan selalu muncul otomatis
+LINK_PERMANEN = "https://drive.google.com/drive/folders/1X4Og0psVrv-8q2Y-pyi170XdAd4XhoHw?usp=drive_link"
+
+if 'v_link' not in st.session_state:
+    st.session_state['v_link'] = LINK_PERMANEN
+
 # --- SISTEM LOGIN ---
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -46,14 +53,14 @@ if not st.session_state['logged_in']:
             st.error("Username atau Password salah!")
     st.stop()
 
-# --- FUNGSI RESET FORM ---
+# --- FUNGSI RESET FORM (Tanpa menghapus link permanen) ---
 def clear_form():
     st.session_state["v_nama"] = ""
     st.session_state["v_nik"] = ""
     st.session_state["v_ayah"] = ""
     st.session_state["v_ibu"] = ""
     st.session_state["v_alamat"] = ""
-    st.session_state["v_link"] = ""
+    # Link tidak dikosongkan agar tetap ada untuk input selanjutnya
     st.session_state["v_vaksin"] = []
 
 # Navigasi
@@ -80,8 +87,8 @@ if menu == "Input Data":
     st.markdown("### 👶 Informasi Balita")
     c1, c2 = st.columns(2)
     with c1:
-        nama_anak = st.text_input("Nama Anak*", key="v_nama")
-        nik = st.text_input("NIK*", key="v_nik")
+        st.text_input("Nama Anak*", key="v_nama")
+        st.text_input("NIK*", key="v_nik")
         jk = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], horizontal=True, key="v_jk")
     with c2:
         tgl_lahir = st.date_input("Tanggal Lahir", value=date.today(), key="v_tgl")
@@ -94,11 +101,12 @@ if menu == "Input Data":
     st.markdown("### 👪 Keluarga, Alamat & Dokumentasi")
     c3, c4 = st.columns(2)
     with c3:
-        nama_ayah = st.text_input("Nama Ayah", key="v_ayah")
-        nama_ibu = st.text_input("Nama Ibu", key="v_ibu")
+        st.text_input("Nama Ayah", key="v_ayah")
+        st.text_input("Nama Ibu", key="v_ibu")
     with c4:
-        alamat = st.text_area("Alamat Lengkap", key="v_alamat")
-        link_dok = st.text_input("🔗 Link Google Drive Foto (Dokumentasi)", placeholder="Paste link di sini...", key="v_link")
+        st.text_area("Alamat Lengkap", key="v_alamat")
+        # KOLOM LINK SEKARANG MENGAMBIL DATA DARI SESSION STATE PERMANEN
+        st.text_input("🔗 Link Google Drive Dokumentasi", key="v_link")
 
     st.markdown("---")
     st.markdown("### 💉 Jenis Vaksin")
@@ -109,23 +117,30 @@ if menu == "Input Data":
         "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", 
         "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"
     ]
-    vaksin_pilihan = st.multiselect("Vaksin*", daftar_vaksin, key="v_vaksin")
+    st.multiselect("Vaksin*", daftar_vaksin, key="v_vaksin")
 
     if st.button("SIMPAN DATA SEKARANG", use_container_width=True, key="btn_simpan"):
-        if nama_petugas == "-- Pilih --" or not nama_anak or not nik:
+        if nama_petugas == "-- Pilih --" or not st.session_state.v_nama or not st.session_state.v_nik:
             st.error("Data petugas, nama anak, dan NIK harus diisi!")
         else:
             payload = {
-                "nama_petugas": nama_petugas, "nama_anak": nama_anak, "nik_anak": nik,
-                "tgl_lahir": str(tgl_lahir), "jenis_kelamin": jk, "usia_bulan": usia_bln,
-                "nama_ayah": nama_ayah, "nama_ibu": nama_ibu, "alamat": alamat,
-                "link_dokumentasi": link_dok, "vaksin": ", ".join(vaksin_pilihan)
+                "nama_petugas": nama_petugas, 
+                "nama_anak": st.session_state.v_nama, 
+                "nik_anak": st.session_state.v_nik,
+                "tgl_lahir": str(tgl_lahir), 
+                "jenis_kelamin": jk, 
+                "usia_bulan": usia_bln,
+                "nama_ayah": st.session_state.v_ayah, 
+                "nama_ibu": st.session_state.v_ibu, 
+                "alamat": st.session_state.v_alamat,
+                "link_dokumentasi": st.session_state.v_link, 
+                "vaksin": ", ".join(st.session_state.v_vaksin)
             }
             res = requests.post(url_base, json=payload, headers=headers)
             if res.status_code in [200, 201]:
-                st.success(f"Berhasil simpan data {nama_anak}!")
+                st.success(f"Berhasil simpan data {st.session_state.v_nama}!")
                 st.balloons()
-                clear_form() # Kosongkan data
+                clear_form()
                 st.rerun()
 
 # --- HALAMAN DASHBOARD ---
@@ -136,15 +151,11 @@ elif menu == "Dashboard":
         df = pd.DataFrame(res.json())
         if not df.empty:
             st.metric("Total Anak Terdata", len(df))
-            
-            # Grafik Horizontal agar nama tidak miring
             counts = df['nama_petugas'].value_counts().reset_index()
             counts.columns = ['Petugas', 'Jumlah']
-            fig = px.bar(counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', 
-                         color='Jumlah', color_continuous_scale='Purples')
+            fig = px.bar(counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', color='Jumlah', color_continuous_scale='Purples')
             fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
             st.plotly_chart(fig, use_container_width=True)
-            
-            # Tabel dengan link yang bisa diklik
             st.markdown("### 📋 Data Lengkap")
+            # Menampilkan link agar bisa diklik langsung di tabel
             st.dataframe(df, use_container_width=True)
