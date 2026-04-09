@@ -114,7 +114,7 @@ if menu == "Input Data":
     st.markdown("### 💉 Layanan Vaksin")
     n_vaksin = st.multiselect("Pilih Jenis Vaksin*", MASTER_VAKSIN, key="vaksin_key")
 
-    # --- Poin 3: Proses Simpan & Reset Otomatis ---
+   # --- PROSES SIMPAN (VERSI ANTI ERROR KONEKSI) ---
     if st.button("💾 SIMPAN DATA", use_container_width=True):
         if nama_petugas == "-- Pilih --" or n_desa == "-- Pilih Desa --" or not n_anak:
             st.warning("⚠️ Mohon lengkapi Petugas, Desa, dan Nama Anak!")
@@ -126,23 +126,24 @@ if menu == "Input Data":
                 "alamat": n_alamat, "link_dokumentasi": LINK_DRIVE, "vaksin": ", ".join(n_vaksin)
             }
             
-            try:
-                res = requests.post(url_base, json=payload, headers=headers)
-                if res.status_code in [200, 201]:
-                    # PROSES PEMBERSIHAN (RESET)
-                    for k in ["petugas_key", "desa_key", "nama_key", "nik_key", "tgl_key", "jk_key", "ayah_key", "ibu_key", "alamat_key", "vaksin_key"]:
-                        if k in st.session_state:
-                            del st.session_state[k]
-                    
-                    st.success(f"✅ Data {n_anak} berhasil disimpan!")
-                    st.balloons()
-                    # Paksa aplikasi refresh supaya kotak kosong
-                    st.rerun() 
-                else:
-                    st.error("Gagal simpan ke database.")
-            except:
-                st.error("Terjadi masalah koneksi.")
-
+            # Kita lakukan kirim data dulu
+            res = requests.post(url_base, json=payload, headers=headers)
+            
+            if res.status_code in [200, 201]:
+                # Tampilkan pesan sukses dulu
+                st.success(f"✅ Data {n_anak} berhasil disimpan!")
+                st.balloons()
+                
+                # BERSIHKAN SEMUA KOTAK INPUT (Poin 2 & 3)
+                for k in ["petugas_key", "desa_key", "nama_key", "nik_key", "tgl_key", "jk_key", "ayah_key", "ibu_key", "alamat_key", "vaksin_key"]:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                
+                # Kasih tombol buat refresh manual agar aman dari error koneksi palsu
+                if st.button("INPUT DATA BARU"):
+                    st.rerun()
+            else:
+                st.error(f"Gagal simpan! Database menolak dengan kode: {res.status_code}")
 # --- 8. HALAMAN DASHBOARD ---
 elif menu == "Dashboard":
     st.markdown('<div class="header-box"><h1 class="judul-teks">📊 DASHBOARD MONITORING</h1></div>', unsafe_allow_html=True)
