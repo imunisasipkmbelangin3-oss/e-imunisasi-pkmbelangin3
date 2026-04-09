@@ -143,7 +143,7 @@ if menu == "Input Data":
                 clear_form()
                 st.rerun()
 
-# --- HALAMAN DASHBOARD (VERSI MANUAL OVERRIDE - PASTI JADI LINK) ---
+# --- HALAMAN DASHBOARD (VERSI PASTI MUNCUL & BISA DIKLIK) ---
 elif menu == "Dashboard":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
     
@@ -164,33 +164,32 @@ elif menu == "Dashboard":
             fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
             st.plotly_chart(fig, use_container_width=True)
             
-            st.markdown("### 📋 Data Lengkap (Klik Link untuk Lihat Foto)")
+            st.markdown("### 📋 Data Lengkap")
 
-            # --- FORCE LINK COLUMN ---
-            # Kita paksa kolom 'link_dokumentasi' menjadi link aktif
-            # Jika namanya beda di Supabase, ganti tulisan "link_dokumentasi" di bawah ini
-            st.dataframe(
-                df, 
-                use_container_width=True,
-                key="tabel_imunisasi_final", # Key unik agar tabel refresh total
-                column_config={
-                    "link_dokumentasi": st.column_config.LinkColumn(
-                        "Link Dokumentasi",
-                        display_text="Buka Foto/Drive"
-                    )
-                }
-            )
+            # --- PERBAIKAN LINK AGAR TIDAK KOSONG ---
+            # Kita buat fungsi untuk mengubah teks link menjadi link yang bisa diklik secara manual
+            def make_clickable(link):
+                if link and str(link).startswith("http"):
+                    return f'<a target="_blank" href="{link}">Buka Foto/Drive</a>'
+                return "Tidak ada foto"
+
+            # Terapkan fungsi ke kolom link_dokumentasi
+            if 'link_dokumentasi' in df.columns:
+                df['Link Foto'] = df['link_dokumentasi'].apply(make_clickable)
+                # Hapus kolom link asli yang panjang agar tabel rapi
+                cols = [c for c in df.columns if c != 'link_dokumentasi']
+                df = df[cols]
+
+            # Tampilkan Tabel dengan HTML aktif
+            st.write(df.to_html(escape=False, index=False), unsafe_allow_html=True)
             
             # Tombol Download
+            st.markdown("<br>", unsafe_allow_html=True)
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Download Data (CSV)", data=csv, file_name="data_imunisasi.csv", mime='text/csv')
             
         else:
             st.info("Belum ada data.")
-    else:
-        st.error("Gagal mengambil data dari database.")
-
-# --- FOOTER ---
-st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi Digital - Dev by Riko Putra</div>", unsafe_allow_html=True)
+            
 # --- FOOTER ---
 st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi - Dev by Riko Putra</div>", unsafe_allow_html=True)
