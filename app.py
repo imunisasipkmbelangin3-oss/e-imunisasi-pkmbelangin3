@@ -118,11 +118,69 @@ if menu == "Input Data":
                 reset_data()
                 st.rerun() # Refresh halaman agar inputan benar-benar kosong
 
-# --- HALAMAN DASHBOARD ---
+# --- HALAMAN DASHBOARD (VERSI GRAFIK LENGKAP) ---
 elif menu == "Dashboard":
-    st.markdown("<h1 style='text-align:center;'>📊 Dashboard</h1>", unsafe_allow_html=True)
-    res = requests.get(url_base, headers=headers)
-    if res.status_code == 200:
-        df = pd.DataFrame(res.json())
-        if not df.empty:
-            st.dataframe(df, use_container_width=True)
+    st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
+    
+    try:
+        res = requests.get(url_base, headers=headers)
+        if res.status_code == 200:
+            data_json = res.json()
+            if data_json:
+                df = pd.DataFrame(data_json)
+                
+                # --- RINGKASAN DATA ---
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Anak", len(df))
+                
+                # Deteksi kolom petugas untuk ringkasan
+                kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
+                c2.metric("Petugas Aktif", df[kp].nunique())
+                c3.metric("Update", date.today().strftime("%d/%m/%Y"))
+
+                # --- BAGIAN GRAFIK ---
+                st.markdown("### 📈 Capaian Input Per Petugas")
+                
+                # Hitung jumlah input per petugas
+                df_counts = df[kp].value_counts().reset_index()
+                df_counts.columns = ['Petugas', 'Jumlah']
+                
+                # Buat Grafik Batang
+                fig = px.bar(
+                    df_counts, 
+                    x='Petugas', 
+                    y='Jumlah',
+                    text='Jumlah',
+                    color='Jumlah',
+                    color_continuous_scale='Purples',
+                    labels={'Petugas': 'Nama Petugas', 'Jumlah': 'Total Data'}
+                )
+                
+                # Percantik tampilan grafik
+                fig.update_traces(textposition='outside')
+                fig.update_layout(
+                    xaxis_tickangle=-45,
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    margin=dict(l=20, r=20, t=20, b=20)
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # --- BAGIAN TABEL ---
+                st.markdown("### 📋 Tabel Riwayat Data")
+                st.dataframe(df, use_container_width=True)
+                
+                # Tambahkan tombol download kalau Mas butuh laporannya dalam Excel/CSV
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Download Data (CSV)", data=csv, file_name=f"data_imunisasi_{date.today()}.csv", mime='text/csv')
+                
+            else:
+                st.info("Belum ada data yang tersimpan di database.")
+        else:
+            st.error(f"Gagal mengambil data: {res.status_code}")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan teknis: {e}")
+
+# --- FOOTER ---
+st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi Digital - Dev by Riko Putra</div>", unsafe_allow_html=True)
