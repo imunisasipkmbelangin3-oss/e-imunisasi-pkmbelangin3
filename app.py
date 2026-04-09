@@ -143,19 +143,50 @@ if menu == "Input Data":
                 clear_form()
                 st.rerun()
 
-# --- HALAMAN DASHBOARD ---
+# --- HALAMAN DASHBOARD (VERSI LINK BISA DIKLIK) ---
 elif menu == "Dashboard":
-    st.markdown("<h1 style='text-align:center;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
+    
     res = requests.get(url_base, headers=headers)
     if res.status_code == 200:
-        df = pd.DataFrame(res.json())
-        if not df.empty:
+        data_json = res.json()
+        if data_json:
+            df = pd.DataFrame(data_json)
+            
+            # --- Ringkasan Atas ---
             st.metric("Total Anak Terdata", len(df))
+            
+            # --- Grafik ---
             counts = df['nama_petugas'].value_counts().reset_index()
             counts.columns = ['Petugas', 'Jumlah']
-            fig = px.bar(counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', color='Jumlah', color_continuous_scale='Purples')
+            fig = px.bar(counts, x='Jumlah', y='Petugas', orientation='h', text='Jumlah', 
+                         color='Jumlah', color_continuous_scale='Purples')
             fig.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(l=150))
             st.plotly_chart(fig, use_container_width=True)
-            st.markdown("### 📋 Data Lengkap")
-            # Menampilkan link agar bisa diklik langsung di tabel
-            st.dataframe(df, use_container_width=True)
+            
+            # --- TABEL DENGAN LINK AKTIF ---
+            st.markdown("### 📋 Data Lengkap (Klik Link untuk Lihat Foto)")
+            
+            # Bagian ini yang membuat link bisa diklik:
+            st.dataframe(
+                df, 
+                use_container_width=True,
+                column_config={
+                    "link_dokumentasi": st.column_config.LinkColumn(
+                        "Link Dokumentasi",
+                        help="Klik link ini untuk membuka Google Drive",
+                        validate=r"^https://.*",
+                        display_text="Buka Foto/Drive" # Teks yang muncul di tabel
+                    )
+                }
+            )
+            
+            # Tombol Download CSV
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Download Data (CSV)", data=csv, file_name=f"laporan_imunisasi.csv", mime='text/csv')
+            
+        else:
+            st.info("Belum ada data.")
+
+# --- FOOTER ---
+st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi - Dev by Riko Putra</div>", unsafe_allow_html=True)
