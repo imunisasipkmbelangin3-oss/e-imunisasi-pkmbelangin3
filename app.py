@@ -40,7 +40,7 @@ st.markdown("""
     .judul-teks { color: #4a148c; font-weight: 800; font-size: 3rem; margin: 0; letter-spacing: -1px; }
     .sub-judul { color: #7b1fa2; text-align: center; font-size: 1rem; margin-bottom: 20px; margin-top: -10px; }
     div[data-testid="stForm"] { background-color: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-    .stButton>button { width: 100%; border-radius: 12px; height: 3em; background: linear-gradient(45deg, #7b1fa2, #9c27b0); color: white; font-weight: 600; border: none; }
+    .stButton>button { width: 100%; border-radius: 12px; height: 3.5em; background: linear-gradient(45deg, #7b1fa2, #9c27b0); color: white; font-weight: 600; border: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,9 +50,7 @@ if 'logged_in' not in st.session_state:
 
 if not st.session_state['logged_in']:
     if img_data:
-        st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="60"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<h1 style="text-align:center; color:#4a148c;">E-IMUNISASI</h1>', unsafe_allow_html=True)
+        st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="65"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
     
     with st.form("login_form"):
         st.markdown("<h3 style='text-align:center; color:#4a148c;'>🔐 Login Petugas</h3>", unsafe_allow_html=True)
@@ -67,9 +65,9 @@ if not st.session_state['logged_in']:
                 st.error("Username atau Password salah!")
     st.stop()
 
-# --- NAVIGASI ---
-st.sidebar.title("📌 Menu")
-menu = st.sidebar.radio("Pindah Halaman:", ["Input Data", "Dashboard Monitoring", "Keluar"])
+# --- NAVIGASI SIDEBAR ---
+st.sidebar.title("📌 Menu Utama")
+menu = st.sidebar.radio("Pilih Halaman:", ["Input Data", "Dashboard Monitoring", "Keluar"])
 
 if menu == "Keluar":
     st.session_state['logged_in'] = False
@@ -81,14 +79,23 @@ if menu == "Input Data":
         st.markdown(f'<div class="header-box"><img src="data:image/png;base64,{img_data}" height="60"><h1 class="judul-teks">E-IMUNISASI</h1></div>', unsafe_allow_html=True)
     
     with st.form("main_form", clear_on_submit=True):
-        st.markdown("### 👨‍⚕️ Petugas")
-        nama_petugas = st.selectbox("Nama Petugas*", ["-- Pilih --", "Winoto Hadi, A.Md.Kep", "Yanto Perdianta, S.Kep.Ns", "Eva Asri Deti, A.Md.Keb", "Desiani, A.Md.Keb", "Dian Yuniarsih, A.Md.Keb"])
+        st.markdown("### 👨‍⚕️ Petugas Pelaksana")
+        daftar_petugas = [
+            "-- Pilih Nama Petugas --", "Winoto Hadi, A.Md.Kep", "Yanto Perdianta, S.Kep.Ns", 
+            "Eva Asri Deti, A.Md.Keb", "Desiani, A.Md.Keb", "Dian Yuniarsih, A.Md.Keb", 
+            "Florentina Ina, A.Md.Keb", "Dayang Rafeah, A.Md.Keb", "Solekah, A.Md.Keb", 
+            "Rita Epie, A.Md.Keb", "Jumini, A.Md.Keb", "Yuliana Ratih, A.Md.Keb", 
+            "Esty Eva Naoumi, A.Md.Kep", "Trismiya Risva, A.Md.Keb", "Regina Susan, A.Md.Keb", 
+            "Jeane Els Dame P, A.Md.Kep", "Andriyani, A.Md.Keb", "Dewi Palentek, A.Md.Kep", 
+            "Riezka Dwi Andiny Sulistyaningsih, A.Md.Kep", "Bintari Dwi P, A.Md.Keb"
+        ]
+        nama_petugas = st.selectbox("Nama Petugas Bertugas*", daftar_petugas)
         
-        st.markdown("### 👶 Data Anak")
+        st.markdown("### 👶 Informasi Anak")
         c1, c2 = st.columns(2)
         with c1:
-            nama_anak = st.text_input("Nama Anak*")
-            nik = st.text_input("NIK*")
+            nama_anak = st.text_input("Nama Lengkap Anak*")
+            nik = st.text_input("NIK Anak*")
             jk = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], horizontal=True)
         with c2:
             tgl_lahir = st.date_input("Tanggal Lahir")
@@ -104,81 +111,66 @@ if menu == "Input Data":
         with c4:
             alamat = st.text_area("Alamat Lengkap")
 
-        st.markdown("### 💉 Vaksin")
-        vaksin = st.multiselect("Vaksin*", ["HB O", "BCG", "Polio 1", "DPT 1", "PCV 1", "Campak"])
+        st.markdown("### 💉 Tindakan Medik (Vaksin)")
+        # DAFTAR VAKSIN LENGKAP SEPERTI AWAL
+        daftar_vaksin = [
+            "HB O Inject", "BCG", "Polio 1", "DPT / HIB 1", "Polio 2", "Rotavirus 1", 
+            "DPT / HIB 2", "Polio 3", "Rotavirus 2", "DPT / HIB 3", "Polio 4", 
+            "Rotavirus 3", "IPV 1", "IPV 2", "Campak 9 bulan", "DPT Lanjutan", 
+            "Campak Lanjutan", "PCV 1", "PCV 2", "PCV 3", "JE", "TT CATIN", 
+            "TT 1 BUMIL", "TT 2 BUMIL", "TT 3 BUMIL", "TT 4 BUMIL", "TT 5 BUMIL"
+        ]
+        vaksin_dipilih = st.multiselect("Vaksin*", daftar_vaksin)
         
-        submit = st.form_submit_button("SIMPAN DATA")
+        submit = st.form_submit_button("SIMPAN INPUTAN")
         if submit:
-            if nama_petugas == "-- Pilih --" or not nama_anak or not nik:
-                st.error("Lengkapi data wajib!")
+            if nama_petugas == "-- Pilih Nama Petugas --" or not nama_anak or not nik:
+                st.error("❌ Mohon isi Nama Petugas, Nama Anak, dan NIK!")
             else:
                 payload = {
                     "nama_petugas": nama_petugas, "nama_anak": nama_anak, "nik_anak": nik,
                     "tgl_lahir": str(tgl_lahir), "jenis_kelamin": jk, "usia_bulan": usia_bln,
                     "nama_ayah": nama_ayah, "nama_ibu": nama_ibu, "alamat": alamat,
-                    "vaksin": ", ".join(vaksin)
+                    "vaksin": ", ".join(vaksin_dipilih)
                 }
                 res = requests.post(url_base, json=payload, headers=headers)
                 if res.status_code in [200, 201]:
-                    st.success("Data Tersimpan!")
+                    st.success(f"✅ Data {nama_anak} Berhasil Disimpan!")
                     st.balloons()
 
-# --- HALAMAN 2: DASHBOARD MONITORING (VERSI AUTO-DETECT) ---
+# --- HALAMAN 2: DASHBOARD MONITORING ---
 elif menu == "Dashboard Monitoring":
     st.markdown("<h1 style='text-align:center; color:#4a148c;'>📊 Dashboard Monitoring</h1>", unsafe_allow_html=True)
     
     try:
         res = requests.get(url_base, headers=headers)
         if res.status_code == 200:
-            data_json = res.json()
-            if data_json:
-                df = pd.DataFrame(data_json)
+            df = pd.DataFrame(res.json())
+            if not df.empty:
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Total Input", len(df))
                 
-                # --- RINGKASAN ---
-                c1, c2, c3 = st.columns(3)
-                c1.metric("Total Anak", len(df))
+                # Deteksi kolom petugas (biar grafiknya muncul)
+                kp = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
+                col2.metric("Petugas Aktif", df[kp].nunique())
+                col3.metric("Hari Ini", date.today().strftime("%d/%m/%Y"))
                 
-                # Deteksi otomatis kolom petugas (biar tidak error)
-                kolom_p = 'nama_petugas' if 'nama_petugas' in df.columns else df.columns[0]
-                c2.metric("Petugas Aktif", df[kolom_p].nunique())
-                c3.metric("Hari Ini", date.today().strftime("%d/%m/%Y"))
-
-                # --- GRAFIK ---
-                st.markdown("### 📈 Grafik Sebaran Data per Petugas")
+                st.markdown("### 📈 Grafik Sebaran Data Petugas")
+                # Menghitung data agar grafik terlihat naik/berbeda
+                counts = df[kp].value_counts().reset_index()
+                counts.columns = ['Nama Petugas', 'Jumlah Data']
                 
-                # Menghitung jumlah per petugas
-                df_counts = df[kolom_p].value_counts().reset_index()
-                df_counts.columns = ['Petugas', 'Jumlah']
-                
-                # Membuat grafik batang dengan warna gradasi
-                fig = px.bar(
-                    df_counts, 
-                    x='Petugas', 
-                    y='Jumlah',
-                    text='Jumlah', # Munculkan angka di atas batang
-                    color='Jumlah', 
-                    color_continuous_scale='RdPu', # Warna Pink-Ungu
-                    labels={'Petugas': 'Nama Petugas', 'Jumlah': 'Total Input Data'}
-                )
-                
-                # Mengatur tampilan grafik agar lebih cantik
+                fig = px.bar(counts, x='Nama Petugas', y='Jumlah Data', text='Jumlah Data',
+                             color='Jumlah Data', color_continuous_scale='Purples')
                 fig.update_traces(textposition='outside')
-                fig.update_layout(
-                    xaxis_tickangle=-45,
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)'
-                )
-                
                 st.plotly_chart(fig, use_container_width=True)
                 
-                # --- TABEL ---
-                st.markdown("### 📋 Riwayat Transaksi Terbaru")
+                st.markdown("### 📋 Riwayat Data Terkini")
                 st.dataframe(df, use_container_width=True)
-                
             else:
-                st.info("Belum ada data yang masuk.")
+                st.info("Belum ada data di database.")
     except Exception as e:
-        st.error(f"Gagal memuat grafik: {e}")
+        st.error(f"Error: {e}")
 
 # --- FOOTER ---
-st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi - Dev by Riko Putra</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; color: #7b1fa2; font-size: 0.8rem; margin-top: 50px;'><hr>© 2026 E-Imunisasi Digital - Dev by Riko Putra</div>", unsafe_allow_html=True)
